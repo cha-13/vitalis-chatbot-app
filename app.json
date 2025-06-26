@@ -1,0 +1,44 @@
+{
+  "expo": {
+    "scheme": "vitalisapp",
+    "name": "Vitalis",
+    "slug": "vitalisapp",
+    "owner": "cha_091303",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/vitalis-splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#CFFFE5"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#CFFFE5"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.cha_091303.vitalisapp"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "updates": {
+      "enabled": false,
+      "fallbackToCacheTimeout": 0
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2000cd15-b4d4-473f-8a10-199cd1eb1fa3"
+      }
+    },
+    "plugins": [
+      "expo-web-browser"
+    ]
+  }
+}
