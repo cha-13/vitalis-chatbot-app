@@ -23,6 +23,8 @@ import { auth } from '../firebaseConfig';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { sendEmailVerification } from 'firebase/auth';
+
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -31,7 +33,7 @@ const CreateAccount = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [fullName, setFullName] = useState('');
+  const [nickname, setNickname] = useState('');
 
   const isValidGmail = (email) => {
     const regex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
@@ -60,7 +62,7 @@ const CreateAccount = () => {
   }, [response]);
 
   const handleSignUp = async () => {
-    if (!email || !password || !fullName) {
+    if (!email || !password || !nickname) {
       Alert.alert('Validation Error', 'Please fill in all fields.');
       return;
     }
@@ -81,15 +83,21 @@ const CreateAccount = () => {
 
       // full name to Firebase profile
       await updateProfile(user, {
-        displayName: fullName,
+        displayName: nickname,
       });
 
-      Alert.alert('Success', 'Account created!');
-      router.push('/Login');
-    } catch (error) {
-      Alert.alert('Error', error.message);
-    }
-  };
+      await sendEmailVerification(user);
+
+    Alert.alert(
+      'Success',
+      'Account created! Please check your Gmail inbox and verify your email before logging in.'
+    );
+
+    router.push('/Login');
+  } catch (error) {
+    Alert.alert('Error', error.message);
+  }
+};
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#CFFFE5' }}>
@@ -113,9 +121,9 @@ const CreateAccount = () => {
           
           <TextInput
             style={styles.input}
-            placeholder="Full Name"
-            value={fullName}
-            onChangeText={setFullName}
+            placeholder="Nickname"
+            value={nickname}
+            onChangeText={setNickname}
           />
 
           
@@ -179,7 +187,7 @@ const CreateAccount = () => {
           </Text>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+      </SafeAreaView>
   );
 };
 
@@ -195,7 +203,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 40,
     borderBottomRightRadius: 40,
     width: '100%',
-    height: '50%',
+    height: '40%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -210,7 +218,7 @@ const styles = StyleSheet.create({
     color: '#000',
     textAlign: 'left',
     paddingHorizontal: 20,
-    marginTop: 30,
+    marginTop: 10,
     marginBottom: 10,
   },
   input: {
@@ -248,7 +256,7 @@ const styles = StyleSheet.create({
   },
   googleButton: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: '#EEEEEE',
     borderColor: '#ccc',
     borderWidth: 1,
     padding: 15,

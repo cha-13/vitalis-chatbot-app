@@ -105,25 +105,34 @@ const Login = () => {
               </View>
 
               <TouchableOpacity
-                style={styles.continueButton}
-                onPress={() => {
-                  if (!email || !password) {
-                    Alert.alert('Error', 'Please enter both email and password');
-                    return;
-                  }
+  style={styles.continueButton}
+  onPress={() => {
+    if (!email || !password) {
+      Alert.alert('Error', 'Please enter both email and password');
+      return;
+    }
 
-                  signInWithEmailAndPassword(auth, email, password)
-                    .then(() => {
-                      Alert.alert('Success', 'Logged in!');
-                      router.push('/chat');
-                    })
-                    .catch((error) => {
-                      Alert.alert('Login Failed', error.message);
-                    });
-                }}
-              >
-                <Text style={styles.continueText}>Continue</Text>
-              </TouchableOpacity>
+    signInWithEmailAndPassword(auth, email, password)
+      .then((userCredential) => {
+        const user = userCredential.user;
+        if (user.emailVerified) {
+          Alert.alert('Success', 'Logged in!');
+          router.push('/chat');
+        } else {
+          Alert.alert(
+            'Email not verified',
+            'Please verify your email address before logging in.'
+          );
+          auth.signOut(); // Log them out if not verified
+        }
+      })
+      .catch((error) => {
+        Alert.alert('Login Failed', error.message);
+      });
+  }}
+>
+  <Text style={styles.continueText}>Continue</Text>
+</TouchableOpacity>
 
               <Text style={styles.linkText}>
                 Don’t have an account?{' '}
@@ -225,6 +234,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginBottom: 15,
     fontSize: 16,
+    backgroundColor: '#fff',
   },
   passwordWrapper: {
     flexDirection: 'row',
@@ -234,6 +244,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     marginBottom: 15,
+    backgroundColor: '#fff',
   },
   eyeIcon: {
     marginLeft: 10,
@@ -273,6 +284,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     justifyContent: 'center',
+    backgroundColor: '#EEEEEE'
   },
   googleText: {
     marginLeft: 10,
@@ -286,3 +298,4 @@ const styles = StyleSheet.create({
     marginTop: -10,
   },
 });
+

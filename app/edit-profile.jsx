@@ -27,6 +27,32 @@ const avatars = [
   require('../assets/avatars/a8.png'),
   require('../assets/avatars/a9.png'),
   require('../assets/avatars/a10.png'),
+  require('../assets/avatars/a11.png'),
+  require('../assets/avatars/a12.png'),
+  require('../assets/avatars/a13.png'),
+  require('../assets/avatars/a14.png'),
+  require('../assets/avatars/a15.png'),
+  require('../assets/avatars/a16.png'),
+  require('../assets/avatars/a17.png'),
+  require('../assets/avatars/a18.png'),
+  require('../assets/avatars/a19.png'),
+  require('../assets/avatars/a20.png'),
+  require('../assets/avatars/a21.png'),
+  require('../assets/avatars/a22.png'),
+  require('../assets/avatars/a23.png'),
+  require('../assets/avatars/a24.png'),
+  require('../assets/avatars/a25.png'),
+  require('../assets/avatars/a26.png'),
+  require('../assets/avatars/a27.png'),
+  require('../assets/avatars/a28.png'),
+  require('../assets/avatars/a29.png'),
+  require('../assets/avatars/a30.png'),
+  require('../assets/avatars/a31.png'),
+  require('../assets/avatars/a32.png'),
+  require('../assets/avatars/a33.png'),
+  require('../assets/avatars/a34.png'),
+  require('../assets/avatars/a35.png'),
+  require('../assets/avatars/a36.png'),
 ];
 
 const EditProfile = () => {
@@ -79,19 +105,19 @@ const EditProfile = () => {
 
       {/* 🖼️ Avatar Picker */}
       <Text style={styles.label}>Choose your avatar</Text>
-      <View style={styles.avatarContainer}>
-        {avatars.map((avatar, index) => (
-          <TouchableOpacity key={index} onPress={() => setSelectedAvatar(avatar)}>
-            <Image
-              source={avatar}
-              style={[
-                styles.avatar,
-                selectedAvatar === avatar && styles.selectedAvatar,
-              ]}
-            />
-          </TouchableOpacity>
-        ))}
-      </View>
+      <ScrollView contentContainerStyle={styles.avatarContainer} style={styles.avatarScroll}>
+  {avatars.map((avatar, index) => (
+    <TouchableOpacity key={index} onPress={() => setSelectedAvatar(avatar)}>
+      <Image
+        source={avatar}
+        style={[
+          styles.avatar,
+          selectedAvatar === avatar && styles.selectedAvatar,
+        ]}
+      />
+    </TouchableOpacity>
+  ))}
+</ScrollView>
 
       {/* 💾 Save Button */}
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
@@ -174,4 +200,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+  avatarScroll: {
+  maxHeight: 400, // or adjust height as needed
+  marginBottom: 10,
+},
+
 });

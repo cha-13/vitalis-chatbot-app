@@ -1,3 +1,5 @@
+import 'react-native-get-random-values';
+import { v4 as uuidv4 } from 'uuid';
 import React, { useState } from 'react';
 import {
   View,
@@ -9,29 +11,60 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
-import { Ionicons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 
 const Home = () => {
   const [inputText, setInputText] = useState('');
+  const [guestId] = useState(uuidv4());
+  const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
   const router = useRouter();
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputText.trim()) return;
+
+    const question = inputText;
+
+    // Show user message immediately
+    setMessages(prev => [...prev, { sender: 'user', text: question }]);
     setInputText('');
+    setIsTyping(true);
+
+    try {
+      const res = await fetch("https://e2e5c5265c1a.ngrok-free.app/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question,
+          userId: guestId
+        })
+      });
+
+      const data = await res.json();
+
+      // Simulate typing delay
+      setTimeout(() => {
+        setMessages(prev => [...prev, { sender: 'bot', text: data.answer }]);
+        setIsTyping(false);
+      }, 1000);
+
+    } catch (error) {
+      console.error("Guest chat error:", error);
+      setMessages(prev => [...prev, { sender: 'bot', text: "⚠️ Failed to connect to server." }]);
+      setIsTyping(false);
+    }
   };
 
   return (
-  <KeyboardAvoidingView
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    style={{ flex: 1 }}
-  >
-    <ScrollView
-      contentContainerStyle={styles.container}
-      keyboardShouldPersistTaps="handled"
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: '#CCFFE5' }}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
     >
-      {/* Header */}
+      {/* HEADER */}
       <View style={styles.header}>
         <View style={styles.leftHeaderContainer}>
           <TouchableOpacity style={styles.newChatButton}>
@@ -39,38 +72,63 @@ const Home = () => {
           </TouchableOpacity>
           <View style={styles.logoTextContainer}>
             <View style={styles.logoCircle}>
-            <Image
-              source={require('../assets/icon.png')}
-              style={styles.logo}
-            />
+              <Image
+                source={require('../assets/icon.png')}
+                style={styles.logo}
+              />
             </View>
             <Text style={styles.headerTitle}>Vitalis</Text>
           </View>
         </View>
 
-        <TouchableOpacity style={styles.loginButton}
+        <TouchableOpacity
+          style={styles.loginButton}
           onPress={() => router.push('/Login')}
-          >
+        >
           <Text style={styles.loginText}>Log in</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Avatar */}
-      <View style={styles.avatarWrapper}>
-        <Image
-          source={require('../assets/icon.png')}
-          style={styles.avatar}
-        />
+      {/* Avatar + Greeting (Fixed above chat area) */}
+      <View style={styles.topSection}>
+        <View style={styles.avatarWrapper}>
+          <Image
+            source={require('../assets/icon.png')}
+            style={styles.avatar}
+          />
+        </View>
+        <View style={styles.botBubble}>
+          <Text style={styles.botText}>
+            Hey, nice to meet you! I'm Vitalis, your friendly virtual health assistant. I can help you analyze symptoms, give health tips, and provide general wellness advice. Feel free to ask me anything!
+          </Text>
+        </View>
       </View>
 
-      {/* Bot greeting message */}
-      <View style={styles.botBubble}>
-        <Text style={styles.botText}>
-          Hey, nice to meet you! I'm Vitalis, your friendly virtual health assistant. I can help you analyze symptoms, give health tips, and provide general wellness advice. Feel free to ask me anything!
-        </Text>
-      </View>
+      {/* MESSAGES - Scrollable only here */}
+      <ScrollView
+        style={styles.messagesContainer}
+        contentContainerStyle={{ paddingBottom: 10 }}
+      >
+        {messages.map((msg, index) => (
+          <View
+            key={index}
+            style={[
+              styles.messageBubble,
+              msg.sender === 'user' ? styles.userBubble : styles.botBubble
+            ]}
+          >
+            <Text style={styles.messageText}>{msg.text}</Text>
+          </View>
+        ))}
 
-      {/* Input bar */}
+        {isTyping && (
+          <View style={styles.botBubble}>
+            <ActivityIndicator size="small" color="#555" />
+          </View>
+        )}
+      </ScrollView>
+
+      {/* INPUT BOX - Fixed at bottom */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.input}
@@ -84,42 +142,39 @@ const Home = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Footer */}
+      {/* FOOTER */}
       <Text style={styles.footerText}>
         By messaging Vitalis, you agree to our{' '}
         <Text
-         style={styles.linkText}
-         onPress={() => router.push('/terms-of-service')}
-         >
+          style={styles.linkText}
+          onPress={() => router.push('/terms-of-service')}
+        >
           Terms of Service
-          </Text>{' '}
-          and read our{' '}
+        </Text>{' '}
+        and read our{' '}
         <Text
-         style={styles.linkText}
-         onPress={() => router.push('/PrivacyPolicy')}
-         >
+          style={styles.linkText}
+          onPress={() => router.push('/PrivacyPolicy')}
+        >
           Privacy Policy
-          </Text>.
+        </Text>.
       </Text>
-    </ScrollView>
-  </KeyboardAvoidingView>
-);
+    </KeyboardAvoidingView>
+  );
 };
 
 export default Home;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#CCFFE5',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 24,
+    paddingHorizontal: 16,
+    paddingVertical: 50,
+    backgroundColor: '#CCFFE5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
   },
   logoTextContainer: {
     flexDirection: 'row',
@@ -133,12 +188,12 @@ const styles = StyleSheet.create({
     marginBottom: -15,
   },
   logoCircle: {
-  width: 36,
-  height: 36,
-  borderRadius: 18,
-  backgroundColor: '#B0E0E6', 
-  justifyContent: 'center',
-  alignItems: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#B0E0E6',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   headerTitle: {
     fontSize: 20,
@@ -146,19 +201,18 @@ const styles = StyleSheet.create({
     color: '#000',
   },
   leftHeaderContainer: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  gap: 8, 
-},
-  newChatButton: {
-  width: 30,
-  height: 30,
-  borderRadius: 15,
-  justifyContent: 'center',
-  alignItems: 'center',
-  marginRight: 15,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
-  
+  newChatButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
   loginButton: {
     backgroundColor: '#DFFFEF',
     paddingVertical: 6,
@@ -171,16 +225,21 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '600',
   },
+  topSection: {
+    backgroundColor: '#CCFFE5',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
   avatarWrapper: {
-  backgroundColor: '#B0E0E6', 
-  width: 160,
-  height: 160,
-  borderRadius: 90,
-  justifyContent: 'center',
-  alignItems: 'center',
-  alignSelf: 'center',
-  marginBottom: 24,
-},
+    backgroundColor: '#B0E0E6',
+    width: 160,
+    height: 160,
+    borderRadius: 90,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginBottom: 24,
+  },
   avatar: {
     width: 250,
     height: 250,
@@ -193,9 +252,28 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignSelf: 'flex-start',
-    marginBottom: 20,
+    marginBottom: 10,
   },
   botText: {
+    fontSize: 16,
+    color: '#000',
+  },
+  messagesContainer: {
+    flex: 1,
+    paddingHorizontal: 16,
+    backgroundColor: '#CCFFE5',
+  },
+  messageBubble: {
+    padding: 12,
+    borderRadius: 16,
+    marginVertical: 4,
+    maxWidth: '80%',
+  },
+  userBubble: {
+    backgroundColor: '#DFFFEF',
+    alignSelf: 'flex-end',
+  },
+  messageText: {
     fontSize: 16,
     color: '#000',
   },
@@ -206,8 +284,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     alignItems: 'center',
-    marginTop: 'auto',
-    marginBottom: 15,
+    marginHorizontal: 16,
+    marginBottom: 8,
   },
   input: {
     flex: 1,
@@ -224,7 +302,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     color: '#666',
-    marginBottom: 0,
+    marginBottom: 10,
   },
   linkText: {
     textDecorationLine: 'underline',
