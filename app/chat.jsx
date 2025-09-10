@@ -86,7 +86,7 @@ const Chat = () => {
     // ✨ Small delay to show "typing..." animation
     setTimeout(async () => {
     try {
-      const response = await fetch('https://e2e5c5265c1a.ngrok-free.app/ask', {
+      const response = await fetch('https://ada6bf509d73.ngrok-free.app/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -158,9 +158,11 @@ const Chat = () => {
           {/* Chat Body */}
           <ScrollView
             ref={scrollRef}
+            style={styles.scrollView}
             contentContainerStyle={{ paddingBottom: 20 }}
             onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
             keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}   // ✅ alisin yung scroll bar
           >
             <View style={styles.avatarWrapper}>
               <Image source={require('../assets/icon.png')} style={styles.avatar} />
@@ -225,11 +227,17 @@ const Chat = () => {
 
               <View style={styles.historyContainer}>
                 <Text style={styles.historyTitle}>Chat History</Text>
+                <ScrollView
+                  style={{ flex: 1 }}
+                  contentContainerStyle={{ paddingBottom: 20 }}
+                  showsVerticalScrollIndicator={false} // para malinis din
+                >
                 {chatHistory.map((item, i) => (
                   <TouchableOpacity key={i} onPress={() => handleHistoryClick(i)} style={styles.historyItem}>
                     <Text style={styles.historyText}>{item.title}</Text>
                   </TouchableOpacity>
                 ))}
+                </ScrollView>
               </View>
             </TouchableOpacity>
           </TouchableOpacity>
@@ -308,11 +316,15 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignSelf: 'flex-start',
-    marginBottom: 12,
+    marginBottom: 12,      
+    marginLeft: 10,       
+    marginRight: 40,
   },
   userBubble: {
     backgroundColor: '#B0E0E6',
     alignSelf: 'flex-end',
+    marginLeft: 40,       
+    marginRight: 10
   },
   botText: {
     fontSize: 16,

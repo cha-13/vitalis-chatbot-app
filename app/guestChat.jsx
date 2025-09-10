@@ -1,6 +1,6 @@
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,170 +11,160 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-const Home = () => {
+const GuestChat = () => {
   const [inputText, setInputText] = useState('');
   const [guestId] = useState(uuidv4());
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const router = useRouter();
+  const scrollRef = useRef(null);
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
 
     const question = inputText;
-
-    // Show user message immediately
     setMessages(prev => [...prev, { sender: 'user', text: question }]);
     setInputText('');
     setIsTyping(true);
 
-    try {
-      const res = await fetch("https://e2e5c5265c1a.ngrok-free.app/ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question,
-          userId: guestId
-        })
-      });
+    // ✨ simulate typing delay + backend fetch
+    setTimeout(async () => {
+      try {
+        const res = await fetch("https://ada6bf509d73.ngrok-free.app/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question,
+            userId: guestId,
+          }),
+        });
 
-      const data = await res.json();
-
-      // Simulate typing delay
-      setTimeout(() => {
+        const data = await res.json();
         setMessages(prev => [...prev, { sender: 'bot', text: data.answer }]);
-        setIsTyping(false);
-      }, 1000);
-
-    } catch (error) {
-      console.error("Guest chat error:", error);
-      setMessages(prev => [...prev, { sender: 'bot', text: "⚠️ Failed to connect to server." }]);
+      } catch (error) {
+        console.error("Guest chat error:", error);
+        setMessages(prev => [...prev, { sender: 'bot', text: "⚠️ Failed to connect to server." }]);
+      }
       setIsTyping(false);
-    }
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }, 500); // short delay before showing response
   };
 
   return (
-    <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: '#CCFFE5' }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
-    >
-      {/* HEADER */}
-      <View style={styles.header}>
-        <View style={styles.leftHeaderContainer}>
-          <TouchableOpacity style={styles.newChatButton}>
-            <Ionicons name="create-outline" size={18} color="#000" />
-          </TouchableOpacity>
-          <View style={styles.logoTextContainer}>
-            <View style={styles.logoCircle}>
-              <Image
-                source={require('../assets/icon.png')}
-                style={styles.logo}
-              />
-            </View>
-            <Text style={styles.headerTitle}>Vitalis</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push('/Login')}
-        >
-          <Text style={styles.loginText}>Log in</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Avatar + Greeting (Fixed above chat area) */}
-      <View style={styles.topSection}>
-        <View style={styles.avatarWrapper}>
-          <Image
-            source={require('../assets/icon.png')}
-            style={styles.avatar}
-          />
-        </View>
-        <View style={styles.botBubble}>
-          <Text style={styles.botText}>
-            Hey, nice to meet you! I'm Vitalis, your friendly virtual health assistant. I can help you analyze symptoms, give health tips, and provide general wellness advice. Feel free to ask me anything!
-          </Text>
-        </View>
-      </View>
-
-      {/* MESSAGES - Scrollable only here */}
-      <ScrollView
-        style={styles.messagesContainer}
-        contentContainerStyle={{ paddingBottom: 10 }}
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#CCFFE5' }}>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
       >
-        {messages.map((msg, index) => (
-          <View
-            key={index}
-            style={[
-              styles.messageBubble,
-              msg.sender === 'user' ? styles.userBubble : styles.botBubble
-            ]}
+        {/* HEADER */}
+        <View style={styles.header}>
+          <View style={styles.leftHeaderContainer}>
+            <TouchableOpacity style={styles.newChatButton}>
+              <Ionicons name="create-outline" size={18} color="#000" />
+            </TouchableOpacity>
+            <View style={styles.logoTextContainer}>
+              <View style={styles.logoCircle}>
+                <Image source={require('../assets/icon.png')} style={styles.logo} />
+              </View>
+              <Text style={styles.headerTitle}>Vitalis</Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={() => router.push('/Login')}
           >
-            <Text style={styles.messageText}>{msg.text}</Text>
-          </View>
-        ))}
+            <Text style={styles.loginText}>Log in</Text>
+          </TouchableOpacity>
+        </View>
 
-        {isTyping && (
+        {/* CHAT BODY */}
+        <ScrollView
+          ref={scrollRef}
+          contentContainerStyle={{ paddingBottom: 20 }}
+          onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
+          keyboardShouldPersistTaps="handled"
+        >
+          {/* Greeting */}
+          <View style={styles.avatarWrapper}>
+            <Image source={require('../assets/icon.png')} style={styles.avatar} />
+          </View>
           <View style={styles.botBubble}>
-            <ActivityIndicator size="small" color="#555" />
+            <Text style={styles.botText}>
+              Hey, nice to meet you! I'm Vitalis, your friendly virtual health assistant. I can help you analyze symptoms, give health tips, and provide general wellness advice. Feel free to ask me anything!
+            </Text>
           </View>
-        )}
-      </ScrollView>
 
-      {/* INPUT BOX - Fixed at bottom */}
-      <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ask anything"
-          value={inputText}
-          onChangeText={setInputText}
-          placeholderTextColor="#B2BEB5"
-        />
-        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
-          <Ionicons name="arrow-forward" size={20} color="#000" />
-        </TouchableOpacity>
-      </View>
+          {/* Messages */}
+          {messages.map((msg, index) => (
+            <View
+              key={index}
+              style={[
+                styles.messageBubble,
+                msg.sender === 'user' ? styles.userBubble : styles.botBubble
+              ]}
+            >
+              <Text style={styles.messageText}>{msg.text}</Text>
+            </View>
+          ))}
 
-      {/* FOOTER */}
-      <Text style={styles.footerText}>
-        By messaging Vitalis, you agree to our{' '}
-        <Text
-          style={styles.linkText}
-          onPress={() => router.push('/terms-of-service')}
-        >
-          Terms of Service
-        </Text>{' '}
-        and read our{' '}
-        <Text
-          style={styles.linkText}
-          onPress={() => router.push('/PrivacyPolicy')}
-        >
-          Privacy Policy
-        </Text>.
-      </Text>
-    </KeyboardAvoidingView>
+          {/* ✅ Typing indicator like chat.jsx */}
+          {isTyping && (
+            <View style={styles.botBubble}>
+              <Text style={styles.botText}>Vitalis is typing...</Text>
+            </View>
+          )}
+        </ScrollView>
+
+        {/* INPUT BOX */}
+        <View style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            placeholder="Ask anything"
+            value={inputText}
+            onChangeText={setInputText}
+            placeholderTextColor="#B2BEB5"
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, isTyping && { opacity: 0.5 }]}
+            onPress={handleSend}
+            disabled={isTyping}
+          >
+            <Ionicons name="arrow-forward" size={20} color="#000" />
+          </TouchableOpacity>
+        </View>
+
+        {/* FOOTER */}
+        <Text style={styles.footerText}>
+          By messaging Vitalis, you agree to our{' '}
+          <Text style={styles.linkText} onPress={() => router.push('/terms-of-service')}>
+            Terms of Service
+          </Text>{' '}
+          and read our{' '}
+          <Text style={styles.linkText} onPress={() => router.push('/PrivacyPolicy')}>
+            Privacy Policy
+          </Text>.
+        </Text>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
-export default Home;
+export default GuestChat;
 
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 12,
     paddingHorizontal: 16,
-    paddingVertical: 50,
-    backgroundColor: '#CCFFE5',
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    paddingVertical: 12,
   },
   logoTextContainer: {
     flexDirection: 'row',
@@ -225,11 +215,6 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '600',
   },
-  topSection: {
-    backgroundColor: '#CCFFE5',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
   avatarWrapper: {
     backgroundColor: '#B0E0E6',
     width: 160,
@@ -252,7 +237,10 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     alignSelf: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 12,
+    maxWidth: '75%',      
+    marginLeft: 10,       
+    marginRight: 40,
   },
   botText: {
     fontSize: 16,
@@ -272,6 +260,9 @@ const styles = StyleSheet.create({
   userBubble: {
     backgroundColor: '#DFFFEF',
     alignSelf: 'flex-end',
+    maxWidth: '75%',      
+    marginLeft: 40,       
+    marginRight: 10,
   },
   messageText: {
     fontSize: 16,
@@ -284,8 +275,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 16,
     alignItems: 'center',
-    marginHorizontal: 16,
     marginBottom: 8,
+    marginHorizontal: 16,
   },
   input: {
     flex: 1,
