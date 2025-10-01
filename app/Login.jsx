@@ -127,8 +127,32 @@ const Login = () => {
         }
       })
       .catch((error) => {
-        Alert.alert('Login Failed', error.message);
-      });
+  let customMessage = 'Login failed. Please try again.';
+  switch (error.code) {
+    case 'auth/too-many-requests':
+      customMessage = 'Too many login attempts. Please try again later.';
+      break;
+    case 'auth/wrong-password':
+      customMessage = 'Incorrect password. Please try again.';
+      break;
+    case 'auth/user-not-found':
+      customMessage = 'No account found with this email.';
+      break;
+    case 'auth/invalid-email':
+      customMessage = 'The email address is badly formatted.';
+      break;
+    case 'auth/network-request-failed':
+      customMessage = 'Network error. Please check your internet connection.';
+      break;
+    case 'auth/invalid-credential':
+      customMessage = 'invalid credential';
+      break;
+    default:
+      customMessage = error.message; // fallback to original message
+  }
+
+  Alert.alert('Login Failed', customMessage);
+});
   }}
 >
   <Text style={styles.continueText}>Continue</Text>

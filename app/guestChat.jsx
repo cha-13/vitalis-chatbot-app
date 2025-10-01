@@ -35,7 +35,7 @@ const GuestChat = () => {
     // ✨ simulate typing delay + backend fetch
     setTimeout(async () => {
       try {
-        const res = await fetch("https://ada6bf509d73.ngrok-free.app/ask", {
+        const res = await fetch("https://8dec951b0e0d.ngrok-free.app/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

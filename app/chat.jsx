@@ -6,7 +6,7 @@ import {
 import { Ionicons, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { auth, db } from '../firebaseConfig';
-import { doc, getDoc, setDoc, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Chat = () => {
@@ -22,7 +22,7 @@ const Chat = () => {
   const user = auth.currentUser;
   const router = useRouter();
 
-    // Load user display name and photo
+  // Load user display name and photo
   useEffect(() => {
     if (user) {
       setUserData({
@@ -40,7 +40,8 @@ const Chat = () => {
         const docSnap = await getDoc(userRef);
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setChatHistory(data.chatHistory || []);
+          // Filter out cleared chats
+          setChatHistory((data.chatHistory || []).filter(chat => !chat.cleared));
         }
       };
       fetchChats();
@@ -58,15 +59,15 @@ const Chat = () => {
 
     const userMessage = { text: inputText, sender: 'user' };
     let updatedHistory = [...chatHistory];
-  let chatIndex = activeChatIndex;
+    let chatIndex = activeChatIndex;
 
-  // Add user message
-  setCurrentChat(prev => [...prev, userMessage]);
-  setInputText(''); // ✅ Clear input right away
-  setIsBotTyping(true); // ✅ show typing animation
+    // Add user message
+    setCurrentChat(prev => [...prev, userMessage]);
+    setInputText('');
+    setIsBotTyping(true);
 
     if (isNewChat) {
-      const title = inputText.trim().slice(0, 40); // up to 40 chars, or customize
+      const title = inputText.trim().slice(0, 40);
       const newChat = {
         title,
         messages: [userMessage],
@@ -83,41 +84,38 @@ const Chat = () => {
     setChatHistory(updatedHistory);
     saveChatToFirestore(updatedHistory);
 
-    // ✨ Small delay to show "typing..." animation
     setTimeout(async () => {
-    try {
-      const response = await fetch('https://ada6bf509d73.ngrok-free.app/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          question: inputText,
-          userId: user.uid,
-        }),
-      });
+      try {
+        const response = await fetch('https://9f39569a4b7e.ngrok-free.app/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: inputText,
+            userId: user.uid,
+          }),
+        });
 
-      const data = await response.json();
-      const botMessage = {
-        text: data.answer || '❌ ' + data.error || '⚠️ Something went wrong.',
-        sender: 'bot',
-      };
+        const data = await response.json();
+        const botMessage = {
+          text: data.answer || '❌ ' + data.error || '⚠️ Something went wrong.',
+          sender: 'bot',
+        };
 
-      const updatedCurrent = [...currentChat, userMessage, botMessage];
-      updatedHistory[chatIndex].messages.push(botMessage);
-      setCurrentChat(updatedCurrent);
-      setChatHistory(updatedHistory);
-      saveChatToFirestore(updatedHistory);
-    } catch (error) {
-      console.error('Chat fetch error:', error);
-      const errorMessage = { text: '⚠️ Failed to connect to server.', sender: 'bot' };
-      setCurrentChat(prev => [...prev, errorMessage]);
-    }
+        const updatedCurrent = [...currentChat, userMessage, botMessage];
+        updatedHistory[chatIndex].messages.push(botMessage);
+        setCurrentChat(updatedCurrent);
+        setChatHistory(updatedHistory);
+        saveChatToFirestore(updatedHistory);
+      } catch (error) {
+        console.error('Chat fetch error:', error);
+        const errorMessage = { text: '⚠️ Failed to connect to server.', sender: 'bot' };
+        setCurrentChat(prev => [...prev, errorMessage]);
+      }
 
-
-
-    setIsBotTyping(false); // ✅ Stop typing animation
-  setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
-  }, 400); // small delay
-};
+      setIsBotTyping(false);
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    }, 400);
+  };
 
   const handleNewChat = () => {
     setCurrentChat([]);
@@ -130,6 +128,23 @@ const Chat = () => {
     setActiveChatIndex(index);
     setIsNewChat(false);
     setSidebarVisible(false);
+  };
+
+  // ✅ Clear All Chat History
+  const handleClearAll = async () => {
+    if (!user) return;
+
+    // Mark as cleared but not deleted
+    const updated = chatHistory.map(chat => ({ ...chat, cleared: true }));
+
+    const userRef = doc(db, "users", user.uid);
+    await setDoc(userRef, { chatHistory: updated }, { merge: true });
+
+    // Update UI
+    setChatHistory([]);
+    setCurrentChat([]);
+    setIsNewChat(true);
+    setActiveChatIndex(null);
   };
 
   return (
@@ -162,7 +177,7 @@ const Chat = () => {
             contentContainerStyle={{ paddingBottom: 20 }}
             onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: true })}
             keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}   // ✅ alisin yung scroll bar
+            showsVerticalScrollIndicator={false}
           >
             <View style={styles.avatarWrapper}>
               <Image source={require('../assets/icon.png')} style={styles.avatar} />
@@ -178,14 +193,12 @@ const Chat = () => {
               </View>
             ))}
 
-            {/* ✅ Typing animation */}
-  {isBotTyping && (
-    <View style={styles.botBubble}>
-      <Text style={styles.botText}>Vitalis is typing...</Text>
-    </View>
-  )}
-</ScrollView>
-          
+            {isBotTyping && (
+              <View style={styles.botBubble}>
+                <Text style={styles.botText}>Vitalis is typing...</Text>
+              </View>
+            )}
+          </ScrollView>
 
           {/* Input */}
           <View style={styles.inputContainer}>
@@ -230,14 +243,19 @@ const Chat = () => {
                 <ScrollView
                   style={{ flex: 1 }}
                   contentContainerStyle={{ paddingBottom: 20 }}
-                  showsVerticalScrollIndicator={false} // para malinis din
+                  showsVerticalScrollIndicator={false}
                 >
-                {chatHistory.map((item, i) => (
-                  <TouchableOpacity key={i} onPress={() => handleHistoryClick(i)} style={styles.historyItem}>
-                    <Text style={styles.historyText}>{item.title}</Text>
-                  </TouchableOpacity>
-                ))}
+                  {chatHistory.map((item, i) => (
+                    <TouchableOpacity key={i} onPress={() => handleHistoryClick(i)} style={styles.historyItem}>
+                      <Text style={styles.historyText}>{item.title}</Text>
+                    </TouchableOpacity>
+                  ))}
                 </ScrollView>
+
+                {/* ✅ Clear Button */}
+                <TouchableOpacity style={styles.clearButton} onPress={handleClearAll}>
+                  <Text style={styles.clearButtonText}>Clear Chat History</Text>
+                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           </TouchableOpacity>
@@ -407,5 +425,16 @@ const styles = StyleSheet.create({
   },
   historyText: {
     color: '#000',
+  },
+  clearButton: {
+    backgroundColor: '#FF6B6B',
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  clearButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });
