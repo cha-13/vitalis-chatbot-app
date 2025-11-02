@@ -110,6 +110,6 @@ app.post('/ask', async (req, res) => {
   }
 });
 
-// IMPORTANT: do NOT call app.listen() for serverless. Export handler for Vercel.
-export default app;
-export const handler = serverless(app);
+app.listen(3000, () => {
+  console.log('🩺 Healthcare AI running at http://localhost:3000/ask');
+});
