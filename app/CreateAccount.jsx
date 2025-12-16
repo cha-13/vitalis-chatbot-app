@@ -122,6 +122,7 @@ const CreateAccount = () => {
           <TextInput
             style={styles.input}
             placeholder="Nickname"
+            placeholderTextColor="#aaa"
             value={nickname}
             onChangeText={setNickname}
           />
@@ -130,6 +131,7 @@ const CreateAccount = () => {
           <TextInput
             style={styles.input}
             placeholder="Email"
+            placeholderTextColor="#aaa"
             value={email}
             onChangeText={setEmail}
             keyboardType="email-address"
@@ -139,8 +141,9 @@ const CreateAccount = () => {
           
           <View style={styles.passwordWrapper}>
             <TextInput
-              style={[styles.input, { flex: 1 }]}
+              style={[styles.input, { flex: 1, color: '#000' }]}
               placeholder="Password must be 8 characters"
+              placeholderTextColor="#aaa"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}

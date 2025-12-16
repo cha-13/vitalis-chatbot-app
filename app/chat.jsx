@@ -86,7 +86,7 @@ const Chat = () => {
 
     setTimeout(async () => {
       try {
-        const response = await fetch('https://9f39569a4b7e.ngrok-free.app/ask', {
+        const response = await fetch('https://health-care-chatbot-i8gaaksw6-chariss-projects-7abca702.vercel.app/ask', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -345,7 +345,8 @@ const styles = StyleSheet.create({
     marginRight: 10
   },
   botText: {
-    fontSize: 16,
+    fontSize: 19,
+    lineHeight: 28,
     color: '#000',
   },
   inputContainer: {

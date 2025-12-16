@@ -90,6 +90,7 @@ const Login = () => {
                 <TextInput
                   style={[styles.input, { flex: 1, marginBottom: 0, borderWidth: 0 }]}
                   placeholder="Enter password"
+                  placeholderTextColor="#aaa"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry={!showPassword}

@@ -13,10 +13,15 @@ export default function GoogleLogin() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+   const redirectUri = AuthSession.makeRedirectUri({
+    useProxy: true, // important for Expo Go testing
+  });
+
   const [request, response, promptAsync] = Google.useAuthRequest({
     expoClientId: '638167981907-6oe7t14fs0dpmfhkvh02v0kh22uv0f36.apps.googleusercontent.com',
     androidClientId: '638167981907-9gqatva2si9tnrfaqprlp7n9lgvj5ob4.apps.googleusercontent.com',
     webClientId: '638167981907-su5pdjo6pf8airb43qncdr8kcslg5n9m.apps.googleusercontent.com',
+    redirectUri,
   });
 
   useEffect(() => {

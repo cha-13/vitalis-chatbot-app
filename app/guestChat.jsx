@@ -35,7 +35,7 @@ const GuestChat = () => {
     // ✨ simulate typing delay + backend fetch
     setTimeout(async () => {
       try {
-        const res = await fetch("https://8dec951b0e0d.ngrok-free.app/ask", {
+        const res = await fetch("https://health-care-chatbot-i8gaaksw6-chariss-projects-7abca702.vercel.app/ask", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
     marginRight: 40,
   },
   botText: {
-    fontSize: 16,
+    fontSize: 19,
     color: '#000',
   },
   messagesContainer: {
@@ -265,7 +265,7 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   messageText: {
-    fontSize: 16,
+    fontSize: 19,
     color: '#000',
   },
   inputContainer: {
